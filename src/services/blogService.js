@@ -1,5 +1,5 @@
-const { Blog, BlogTranslation, Admin } = require('../models');
-const { Op } = require('sequelize');
+const { Blog, BlogTranslation, Admin } = require("../models");
+const { Op } = require("sequelize");
 
 /**
  * Generate slug from title
@@ -8,9 +8,9 @@ const generateSlug = (title) => {
   return title
     .toLowerCase()
     .trim()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_-]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 };
 
 /**
@@ -35,16 +35,18 @@ const createBlog = async (blogData, authorId) => {
     }
 
     // Check if slug already exists
-    const existingBlog = await Blog.findOne({ where: { slug: blogFields.slug } });
+    const existingBlog = await Blog.findOne({
+      where: { slug: blogFields.slug },
+    });
     if (existingBlog) {
-      throw new Error('A blog with this slug already exists');
+      throw new Error("A blog with this slug already exists");
     }
 
     // Set author
     blogFields.authorId = authorId;
 
     // Set publishedAt if status is published
-    if (blogFields.status === 'published' && !blogFields.publishedAt) {
+    if (blogFields.status === "published" && !blogFields.publishedAt) {
       blogFields.publishedAt = new Date();
     }
 
@@ -52,12 +54,12 @@ const createBlog = async (blogData, authorId) => {
     const blog = await Blog.create(blogFields);
 
     // Create translations
-    const translationPromises = translations.map(translation => {
+    const translationPromises = translations.map((translation) => {
       const readingTime = calculateReadingTime(translation.content);
       return BlogTranslation.create({
         ...translation,
         blogId: blog.id,
-        readingTime
+        readingTime,
       });
     });
 
@@ -68,14 +70,14 @@ const createBlog = async (blogData, authorId) => {
       include: [
         {
           model: BlogTranslation,
-          as: 'translations'
+          as: "translations",
         },
         {
           model: Admin,
-          as: 'author',
-          attributes: ['id', 'firstName', 'lastName', 'email']
-        }
-      ]
+          as: "author",
+          attributes: ["id", "firstName", "lastName", "email"],
+        },
+      ],
     });
 
     return createdBlog;
@@ -96,7 +98,7 @@ const getAllBlogs = async (options = {}) => {
       languageCode,
       category,
       search,
-      includeUnpublished = false
+      includeUnpublished = false,
     } = options;
 
     const offset = (page - 1) * limit;
@@ -106,7 +108,7 @@ const getAllBlogs = async (options = {}) => {
     if (status) {
       where.status = status;
     } else if (!includeUnpublished) {
-      where.status = 'published';
+      where.status = "published";
     }
 
     // Filter by category
@@ -124,7 +126,7 @@ const getAllBlogs = async (options = {}) => {
       translationWhere[Op.or] = [
         { title: { [Op.iLike]: `%${search}%` } },
         { content: { [Op.iLike]: `%${search}%` } },
-        { excerpt: { [Op.iLike]: `%${search}%` } }
+        { excerpt: { [Op.iLike]: `%${search}%` } },
       ];
     }
 
@@ -133,20 +135,23 @@ const getAllBlogs = async (options = {}) => {
       include: [
         {
           model: BlogTranslation,
-          as: 'translations',
-          where: Object.keys(translationWhere).length > 0 ? translationWhere : undefined,
-          required: languageCode ? true : false
+          as: "translations",
+          where:
+            Object.keys(translationWhere).length > 0
+              ? translationWhere
+              : undefined,
+          required: languageCode ? true : false,
         },
         {
           model: Admin,
-          as: 'author',
-          attributes: ['id', 'firstName', 'lastName', 'email']
-        }
+          as: "author",
+          attributes: ["id", "firstName", "lastName", "email"],
+        },
       ],
       limit: parseInt(limit),
       offset: parseInt(offset),
-      order: [['createdAt', 'DESC']],
-      distinct: true
+      order: [["createdAt", "DESC"]],
+      distinct: true,
     });
 
     return {
@@ -155,8 +160,8 @@ const getAllBlogs = async (options = {}) => {
         page: parseInt(page),
         limit: parseInt(limit),
         total: count,
-        pages: Math.ceil(count / limit)
-      }
+        pages: Math.ceil(count / limit),
+      },
     };
   } catch (error) {
     throw error;
@@ -171,22 +176,22 @@ const getBlogById = async (id, languageCode = null) => {
     const includeOptions = [
       {
         model: BlogTranslation,
-        as: 'translations',
-        ...(languageCode && { where: { languageCode } })
+        as: "translations",
+        ...(languageCode && { where: { languageCode } }),
       },
       {
         model: Admin,
-        as: 'author',
-        attributes: ['id', 'firstName', 'lastName', 'email']
-      }
+        as: "author",
+        attributes: ["id", "firstName", "lastName", "email"],
+      },
     ];
 
     const blog = await Blog.findByPk(id, {
-      include: includeOptions
+      include: includeOptions,
     });
 
     if (!blog) {
-      throw new Error('Blog not found');
+      throw new Error("Blog not found");
     }
 
     return blog;
@@ -203,27 +208,27 @@ const getBlogBySlug = async (slug, languageCode = null) => {
     const includeOptions = [
       {
         model: BlogTranslation,
-        as: 'translations',
-        ...(languageCode && { where: { languageCode } })
+        as: "translations",
+        ...(languageCode && { where: { languageCode } }),
       },
       {
         model: Admin,
-        as: 'author',
-        attributes: ['id', 'firstName', 'lastName', 'email']
-      }
+        as: "author",
+        attributes: ["id", "firstName", "lastName", "email"],
+      },
     ];
 
     const blog = await Blog.findOne({
       where: { slug },
-      include: includeOptions
+      include: includeOptions,
     });
 
     if (!blog) {
-      throw new Error('Blog not found');
+      throw new Error("Blog not found");
     }
 
     // Increment view count
-    await blog.increment('viewCount');
+    await blog.increment("viewCount");
 
     return blog;
   } catch (error) {
@@ -238,21 +243,23 @@ const updateBlog = async (id, blogData, authorId = null) => {
   try {
     const blog = await Blog.findByPk(id);
     if (!blog) {
-      throw new Error('Blog not found');
+      throw new Error("Blog not found");
     }
 
     const { translations, ...blogFields } = blogData;
 
     // Check slug uniqueness if changed
     if (blogFields.slug && blogFields.slug !== blog.slug) {
-      const existingBlog = await Blog.findOne({ where: { slug: blogFields.slug } });
+      const existingBlog = await Blog.findOne({
+        where: { slug: blogFields.slug },
+      });
       if (existingBlog) {
-        throw new Error('A blog with this slug already exists');
+        throw new Error("A blog with this slug already exists");
       }
     }
 
     // Set publishedAt if status changed to published
-    if (blogFields.status === 'published' && blog.status !== 'published') {
+    if (blogFields.status === "published" && blog.status !== "published") {
       blogFields.publishedAt = new Date();
     }
 
@@ -265,12 +272,12 @@ const updateBlog = async (id, blogData, authorId = null) => {
       await BlogTranslation.destroy({ where: { blogId: id } });
 
       // Create new translations
-      const translationPromises = translations.map(translation => {
+      const translationPromises = translations.map((translation) => {
         const readingTime = calculateReadingTime(translation.content);
         return BlogTranslation.create({
           ...translation,
           blogId: id,
-          readingTime
+          readingTime,
         });
       });
 
@@ -282,14 +289,14 @@ const updateBlog = async (id, blogData, authorId = null) => {
       include: [
         {
           model: BlogTranslation,
-          as: 'translations'
+          as: "translations",
         },
         {
           model: Admin,
-          as: 'author',
-          attributes: ['id', 'firstName', 'lastName', 'email']
-        }
-      ]
+          as: "author",
+          attributes: ["id", "firstName", "lastName", "email"],
+        },
+      ],
     });
 
     return updatedBlog;
@@ -305,29 +312,93 @@ const deleteBlog = async (id) => {
   try {
     const blog = await Blog.findByPk(id);
     if (!blog) {
-      throw new Error('Blog not found');
+      throw new Error("Blog not found");
     }
 
     await blog.destroy();
-    return { message: 'Blog deleted successfully' };
+    return { message: "Blog deleted successfully" };
   } catch (error) {
     throw error;
   }
 };
 
 /**
- * Get blog categories
+ * Get blog categories with translations
  */
-const getCategories = async () => {
+const getCategories = async (languageCode = "en") => {
   try {
+    // Get categories from both Blog and BlogTranslation tables
     const blogs = await Blog.findAll({
-      where: { status: 'published' },
-      attributes: ['category'],
-      group: ['category'],
-      having: { category: { [Op.ne]: null } }
+      where: { status: "published" },
+      include: [
+        {
+          model: BlogTranslation,
+          as: "translations",
+          where: languageCode ? { languageCode } : undefined,
+          required: false,
+        },
+      ],
     });
 
-    return blogs.map(blog => blog.category).filter(Boolean);
+    const categories = new Set();
+
+    blogs.forEach((blog) => {
+      // Add category from translation if available
+      if (blog.translations && blog.translations.length > 0) {
+        blog.translations.forEach((translation) => {
+          if (translation.category) {
+            categories.add(translation.category);
+          }
+        });
+      }
+      // Fallback to default category
+      if (blog.category) {
+        categories.add(blog.category);
+      }
+    });
+
+    return Array.from(categories).filter(Boolean);
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Get all tags with translations
+ */
+const getTags = async (languageCode = "en") => {
+  try {
+    // Get tags from both Blog and BlogTranslation tables
+    const blogs = await Blog.findAll({
+      where: { status: "published" },
+      include: [
+        {
+          model: BlogTranslation,
+          as: "translations",
+          where: languageCode ? { languageCode } : undefined,
+          required: false,
+        },
+      ],
+    });
+
+    const tags = new Set();
+
+    blogs.forEach((blog) => {
+      // Add tags from translation if available
+      if (blog.translations && blog.translations.length > 0) {
+        blog.translations.forEach((translation) => {
+          if (translation.tags && Array.isArray(translation.tags)) {
+            translation.tags.forEach((tag) => tags.add(tag));
+          }
+        });
+      }
+      // Fallback to default tags
+      if (blog.tags && Array.isArray(blog.tags)) {
+        blog.tags.forEach((tag) => tags.add(tag));
+      }
+    });
+
+    return Array.from(tags).filter(Boolean);
   } catch (error) {
     throw error;
   }
@@ -340,6 +411,6 @@ module.exports = {
   getBlogBySlug,
   updateBlog,
   deleteBlog,
-  getCategories
+  getCategories,
+  getTags,
 };
-

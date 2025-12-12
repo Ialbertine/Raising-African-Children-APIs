@@ -1,4 +1,4 @@
-const blogService = require('../services/blogService');
+const blogService = require("../services/blogService");
 
 /**
  * Create a new blog post
@@ -6,16 +6,16 @@ const blogService = require('../services/blogService');
 const createBlog = async (req, res) => {
   try {
     const blog = await blogService.createBlog(req.body, req.adminId);
-    
+
     res.status(201).json({
       success: true,
-      message: 'Blog created successfully',
-      data: blog
+      message: "Blog created successfully",
+      data: blog,
     });
   } catch (error) {
     res.status(400).json({
       success: false,
-      message: error.message || 'Failed to create blog'
+      message: error.message || "Failed to create blog",
     });
   }
 };
@@ -32,7 +32,7 @@ const getAllBlogs = async (req, res) => {
       languageCode,
       category,
       search,
-      includeUnpublished
+      includeUnpublished,
     } = req.query;
 
     const options = {
@@ -42,20 +42,21 @@ const getAllBlogs = async (req, res) => {
       languageCode,
       category,
       search,
-      includeUnpublished: includeUnpublished === 'true' && req.adminId ? true : false
+      includeUnpublished:
+        includeUnpublished === "true" && req.adminId ? true : false,
     };
 
     const result = await blogService.getAllBlogs(options);
-    
+
     res.status(200).json({
       success: true,
       data: result.blogs,
-      pagination: result.pagination
+      pagination: result.pagination,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message || 'Failed to fetch blogs'
+      message: error.message || "Failed to fetch blogs",
     });
   }
 };
@@ -69,16 +70,16 @@ const getBlogById = async (req, res) => {
     const { languageCode } = req.query;
 
     const blog = await blogService.getBlogById(id, languageCode);
-    
+
     res.status(200).json({
       success: true,
-      data: blog
+      data: blog,
     });
   } catch (error) {
-    const statusCode = error.message === 'Blog not found' ? 404 : 500;
+    const statusCode = error.message === "Blog not found" ? 404 : 500;
     res.status(statusCode).json({
       success: false,
-      message: error.message || 'Failed to fetch blog'
+      message: error.message || "Failed to fetch blog",
     });
   }
 };
@@ -92,16 +93,16 @@ const getBlogBySlug = async (req, res) => {
     const { languageCode } = req.query;
 
     const blog = await blogService.getBlogBySlug(slug, languageCode);
-    
+
     res.status(200).json({
       success: true,
-      data: blog
+      data: blog,
     });
   } catch (error) {
-    const statusCode = error.message === 'Blog not found' ? 404 : 500;
+    const statusCode = error.message === "Blog not found" ? 404 : 500;
     res.status(statusCode).json({
       success: false,
-      message: error.message || 'Failed to fetch blog'
+      message: error.message || "Failed to fetch blog",
     });
   }
 };
@@ -113,17 +114,17 @@ const updateBlog = async (req, res) => {
   try {
     const { id } = req.params;
     const blog = await blogService.updateBlog(id, req.body, req.adminId);
-    
+
     res.status(200).json({
       success: true,
-      message: 'Blog updated successfully',
-      data: blog
+      message: "Blog updated successfully",
+      data: blog,
     });
   } catch (error) {
-    const statusCode = error.message === 'Blog not found' ? 404 : 400;
+    const statusCode = error.message === "Blog not found" ? 404 : 400;
     res.status(statusCode).json({
       success: false,
-      message: error.message || 'Failed to update blog'
+      message: error.message || "Failed to update blog",
     });
   }
 };
@@ -135,16 +136,16 @@ const deleteBlog = async (req, res) => {
   try {
     const { id } = req.params;
     await blogService.deleteBlog(id);
-    
+
     res.status(200).json({
       success: true,
-      message: 'Blog deleted successfully'
+      message: "Blog deleted successfully",
     });
   } catch (error) {
-    const statusCode = error.message === 'Blog not found' ? 404 : 500;
+    const statusCode = error.message === "Blog not found" ? 404 : 500;
     res.status(statusCode).json({
       success: false,
-      message: error.message || 'Failed to delete blog'
+      message: error.message || "Failed to delete blog",
     });
   }
 };
@@ -154,16 +155,37 @@ const deleteBlog = async (req, res) => {
  */
 const getCategories = async (req, res) => {
   try {
-    const categories = await blogService.getCategories();
-    
+    const { languageCode } = req.query;
+    const categories = await blogService.getCategories(languageCode);
+
     res.status(200).json({
       success: true,
-      data: categories
+      data: categories,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message || 'Failed to fetch categories'
+      message: error.message || "Failed to fetch categories",
+    });
+  }
+};
+
+/**
+ * Get blog tags
+ */
+const getTags = async (req, res) => {
+  try {
+    const { languageCode } = req.query;
+    const tags = await blogService.getTags(languageCode);
+
+    res.status(200).json({
+      success: true,
+      data: tags,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch tags",
     });
   }
 };
@@ -175,6 +197,6 @@ module.exports = {
   getBlogBySlug,
   updateBlog,
   deleteBlog,
-  getCategories
+  getCategories,
+  getTags,
 };
-
