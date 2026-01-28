@@ -36,6 +36,24 @@ npm start
 ```
 Health check: `GET http://localhost:5000/health`
 
+Deploying to Railway
+--------------------
+See [RAILWAY_DEPLOYMENT.md](./RAILWAY_DEPLOYMENT.md) for detailed step-by-step instructions.
+
+**Quick Steps:**
+1. Create a new Railway project and connect your GitHub repo
+2. Add a PostgreSQL database service (Railway provides `DATABASE_URL` automatically)
+3. Set environment variables in Railway dashboard (see `.env.example` for reference)
+4. Railway will auto-deploy using the `Dockerfile`
+5. After deployment, run migrations via Railway shell:
+   ```bash
+   npm run db:migrate
+   node src/config/createAdmin.js
+   ```
+6. Verify: `GET https://your-app.railway.app/health`
+
+**Note:** Railway automatically provides `DATABASE_URL` - your code already supports this!
+
 Deploying to Render (quick steps)
 ---------------------------------
 1) Create a Postgres instance on Render (use the Internal host).  

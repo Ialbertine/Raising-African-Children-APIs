@@ -1,7 +1,7 @@
 const { Sequelize } = require("sequelize");
 require("dotenv").config();
 
-// Use DATABASE_URL if available (for Render), otherwise use individual variables
+// Use DATABASE_URL if available (Railway/cloud providers), otherwise use individual variables
 const sequelize = process.env.DATABASE_URL
   ? new Sequelize(process.env.DATABASE_URL, {
       dialect: "postgres",

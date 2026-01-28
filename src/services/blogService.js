@@ -1,5 +1,9 @@
 const { Blog, BlogTranslation, Admin } = require("../models");
 const { Op } = require("sequelize");
+const {
+  deleteFromCloudinary,
+  extractPublicId,
+} = require("../config/cloudinary");
 
 /**
  * Generate slug from title
@@ -258,6 +262,19 @@ const updateBlog = async (id, blogData, authorId = null) => {
       }
     }
 
+    // If a new featured image is being uploaded, delete the old one from Cloudinary
+    if (blogFields.featuredImage && blog.featuredImage) {
+      const oldPublicId = extractPublicId(blog.featuredImage);
+      if (oldPublicId) {
+        try {
+          await deleteFromCloudinary(oldPublicId, "image");
+        } catch (error) {
+          // Log error but don't fail the update if deletion fails
+          console.error("Failed to delete old image from Cloudinary:", error);
+        }
+      }
+    }
+
     // Set publishedAt if status changed to published
     if (blogFields.status === "published" && blog.status !== "published") {
       blogFields.publishedAt = new Date();
@@ -313,6 +330,19 @@ const deleteBlog = async (id) => {
     const blog = await Blog.findByPk(id);
     if (!blog) {
       throw new Error("Blog not found");
+    }
+
+    // Delete featured image from Cloudinary if it exists
+    if (blog.featuredImage) {
+      const publicId = extractPublicId(blog.featuredImage);
+      if (publicId) {
+        try {
+          await deleteFromCloudinary(publicId, "image");
+        } catch (error) {
+          // Log error but don't fail the deletion if Cloudinary deletion fails
+          console.error("Failed to delete image from Cloudinary:", error);
+        }
+      }
     }
 
     await blog.destroy();
