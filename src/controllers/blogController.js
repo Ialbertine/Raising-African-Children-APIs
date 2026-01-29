@@ -5,7 +5,17 @@ const blogService = require("../services/blogService");
  */
 const createBlog = async (req, res) => {
   try {
-    const blog = await blogService.createBlog(req.body, req.adminId);
+    // If file was uploaded, add Cloudinary URL to blog data
+    const blogData = { ...req.body };
+    
+    if (req.cloudinaryResult) {
+      blogData.featuredImage = req.cloudinaryResult.url;
+      if (req.body.featuredImageAlt) {
+        blogData.featuredImageAlt = req.body.featuredImageAlt;
+      }
+    }
+
+    const blog = await blogService.createBlog(blogData, req.adminId);
 
     res.status(201).json({
       success: true,
@@ -113,7 +123,18 @@ const getBlogBySlug = async (req, res) => {
 const updateBlog = async (req, res) => {
   try {
     const { id } = req.params;
-    const blog = await blogService.updateBlog(id, req.body, req.adminId);
+    
+    // If file was uploaded, add Cloudinary URL to blog data
+    const blogData = { ...req.body };
+    
+    if (req.cloudinaryResult) {
+      blogData.featuredImage = req.cloudinaryResult.url;
+      if (req.body.featuredImageAlt) {
+        blogData.featuredImageAlt = req.body.featuredImageAlt;
+      }
+    }
+
+    const blog = await blogService.updateBlog(id, blogData, req.adminId);
 
     res.status(200).json({
       success: true,

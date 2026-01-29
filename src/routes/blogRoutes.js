@@ -3,6 +3,7 @@ const router = express.Router();
 const blogController = require("../controllers/blogController");
 const { authenticate, optionalAuth } = require("../middleware/auth");
 const { validateBlog } = require("../middleware/validation");
+const { uploadSingleToCloudinary } = require("../middleware/upload");
 
 /**
  * @route   GET /api/blogs
@@ -44,7 +45,15 @@ router.get("/slug/:slug", validateBlog.getBySlug, blogController.getBlogBySlug);
  * @desc    Create a new blog post
  * @access  Private (Admin only)
  */
-router.post("/", authenticate, validateBlog.create, blogController.createBlog);
+router.post(
+  "/",
+  authenticate,
+  uploadSingleToCloudinary("featuredImage", {
+    folder: "raising-african-children/blogs",
+  }),
+  validateBlog.create,
+  blogController.createBlog
+);
 
 /**
  * @route   PUT /api/blogs/:id
@@ -54,6 +63,9 @@ router.post("/", authenticate, validateBlog.create, blogController.createBlog);
 router.put(
   "/:id",
   authenticate,
+  uploadSingleToCloudinary("featuredImage", {
+    folder: "raising-african-children/blogs",
+  }),
   validateBlog.update,
   blogController.updateBlog
 );
